@@ -8,7 +8,7 @@ import (
 
 func  main() {
 	fmt.Println("Welcome to Momentum Afterbin.")
-	fmt.Println("Remember to load momentum on your pages : {{ server }} or <script src=\"/funcfactory.js\"></script>")
+	fmt.Println("Remember to load momentum on HTML your pages : {{ server }} or <script src=\"/funcfactory.js\"></script>")
 	fmt.Println("Converting Templates and Func tags into accessible JS functions.")
 	fmt.Println("Any web service service URI can be accessed with Ape. ")
 	cfg,err := core.Config()
@@ -79,8 +79,13 @@ func  main() {
 				varname := strings.Split(variabl, " ")
 
 				responseformat += fmt.Sprintf("resp%s%v",varname[0],ind)
+				if strings.Contains(variabl, "error"){
+				binderString += fmt.Sprintf(`
+				resp["%s"] = resp%s%v.Error()`, varname[0], varname[0], ind )
+				} else {
 				binderString += fmt.Sprintf(`
 				resp["%s"] = resp%s%v`, varname[0], varname[0], ind )
+				}
 				if ind < parsablelen {
 					responseformat += ","
 				}
@@ -98,7 +103,7 @@ func  main() {
 			 err := decoder.Decode(&t)
 			 if err != nil {
 			 	w.WriteHeader(http.StatusInternalServerError)
-			    w.Write([]byte(fmt.Sprintf("{\"error\":%%s}",err)))
+			    w.Write([]byte(fmt.Sprintf("{\"error\":%%s}",err.Error())))
 			 }
 			resp := db.O{}
 			%s := Net%s(%s)
