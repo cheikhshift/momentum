@@ -3,10 +3,10 @@
   function jsrequestmomentum(url,payload,type,callback){
    var xhttp = new XMLHttpRequest();
   	xhttp.onreadystatechange = function() {
-    if (xhttp.readyState == 4 && xhttp.status == 200) {
+   		var success = (xhttp.readyState == 4 && xhttp.status == 200)
     	if (type == "POSTJSON"){
-    		callback(JSON.parse(xhttp.responseText));
-    	} else callback(xhttp.responseText);
+    		callback(JSON.parse(xhttp.responseText), success);
+    	} else callback(xhttp.responseText, success );
 
     } 
   };
