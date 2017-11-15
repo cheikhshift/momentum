@@ -58,7 +58,7 @@ func  main() {
 				varname := strings.Split(variabl, " ")
 				fnFormat += fmt.Sprintf("tmvv.%s",strings.Title(varname[0]) )
 				jssetters += fmt.Sprintf(`
-					t.%s = %s`,strings.Title(varname[0]),strings.Title(varname[0]) )
+	t.%s = %s`,strings.Title(varname[0]),strings.Title(varname[0]) )
 				if ind < varsslen {
 					fnFormat += ","
 				}
@@ -81,7 +81,11 @@ func  main() {
 				responseformat += fmt.Sprintf("resp%s%v",varname[0],ind)
 				if strings.Contains(variabl, "error"){
 				binderString += fmt.Sprintf(`
-				resp["%s"] = resp%s%v.Error()`, varname[0], varname[0], ind )
+				if resp%s%v != nil {
+					resp["%s"] = resp%s%v.Error()
+				} else {
+					resp["%s"] = nil
+				}`,varname[0], ind, varname[0], varname[0], ind, varname[0] )
 				} else {
 				binderString += fmt.Sprintf(`
 				resp["%s"] = resp%s%v`, varname[0], varname[0], ind )
