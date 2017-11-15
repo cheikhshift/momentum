@@ -25,11 +25,11 @@ A `<func>` tag is declared within the methods section of a `gos.gxml` file.
 		err = errors.New("error test on GOOOO")	
 			test  = "Test" + varx
 			return 
-		</func>
+	</func>
 
 The previous func tag will generate JS function : (The variable definitions carry over to javascript.)
 
-	function Test(Varx,Numv, function callback(ObjectResponse, success) )
+	function TestAdd(Varx,Numv, function callback(ObjectResponse, success) )
 
 
 Notes :  ObjectResponse variable is an object with your function's returned values. With this `<func>` tag,  the ObjectResponse will have keys `err` and `test` following the tag's return attribute. Success is an indication of successful method invocation. On error, Object response will have one key : `error`, which is a string explanation of why the request failed. 
