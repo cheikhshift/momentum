@@ -3,10 +3,12 @@
   function jsrequestmomentum(url,payload,type,callback){
    var xhttp = new XMLHttpRequest();
   	xhttp.onreadystatechange = function() {
-   		var success = (xhttp.readyState == 4 && xhttp.status == 200)
+  		if(xhttp.readyState == 4){
+   		var success = ( xhttp.status == 200)
     	if (type == "POSTJSON"){
     		callback(JSON.parse(xhttp.responseText), success);
     	} else callback(xhttp.responseText, success );
+    }
   };
 
   var serialize = function(obj) {
