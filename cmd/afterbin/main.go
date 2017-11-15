@@ -65,10 +65,10 @@ func  main() {
 				funcfields = append(funcfields, fmt.Sprintf("%s %s", strings.Title(varname[0]), varname[1] ))
 			}
 			jstrbits += fmt.Sprintf(`function %s(%s, cb){
-				var t = {}
-				%s
-				jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
-			}
+	var t = {}
+	%s
+	jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
+}
 `, v.Name, strings.Replace(fnFormat, "tmvv.", "",  -1  ),jssetters, v.Name)
 			if !strings.Contains( v.Returntype ,"(" ){
 				responseformat  = fmt.Sprintf("resp[\"%s\"]", v.Returntype )
