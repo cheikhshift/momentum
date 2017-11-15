@@ -16,7 +16,7 @@ func  main() {
 		panic(err)
 	}
 	//add template paths
-	var strfuncs, strtemplate string
+	var strfuncs, strtemplate,jsstr,jstrbits string
 
 	for _, v := range cfg.Templates.Templates {
 		strfuncs +=  fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
@@ -24,6 +24,10 @@ func  main() {
 			tmplRendered := Net%s(r.FormValue("payload"))
 			w.Write([]byte(tmplRendered))
 		`, v.Name, v.Name)
+
+		jstrbits += fmt.Sprintf(`function %s(dataOfInterface, cb){ jsrequestmomentum("/momentum/templates", {name: "%s", payload: JSON.stringify(dataOfInterface)},"POST",  cb) }
+			`, v.Name,v.Name)
+		
 	}
 
 	strtemplate = fmt.Sprintf(`http.HandleFunc("/momentum/templates", func(w http.ResponseWriter, r *http.Request) {
@@ -33,25 +37,13 @@ func  main() {
 		%s
 		}
 	})`, strfuncs)
+
+
 	
 	cfg.AddToMainFunc(strtemplate)
-	strtemplate = ""
+	
 	strfuncs = ""
-
-	/*
-			XMLName    xml.Name `xml:"method"`
-			Method     string   `xml:",innerxml"`
-			Name       string   `xml:"name,attr"`
-			Variables  string   `xml:"var,attr"`
-			Limit      string   `xml:"limit,attr"`
-			Object     string   `xml:"object,attr"`
-			Autoface   string   `xml:"autoface,attr"`
-			Keeplocal  string   `xml:"keep-local,attr"`
-			Testi      string   `xml:"testi,attr"`
-			Testo      string   `xml:"testo,attr"`
-			Man 	   string 	`xml:"m,attr"`
-			Returntype string   `xml:"return,attr"`
-	*/
+	jstrbits = ""
 	for _,v := range cfg.Methods.Methods {
 
 
@@ -61,15 +53,24 @@ func  main() {
 			fnFormat := ``
 			funcfields := []string{}
 			binderString := ``
+			jssetters := ``
 			varsslen := len(varss) - 1
 			for ind, variabl := range varss {
 				varname := strings.Split(variabl, " ")
-				fnFormat += fmt.Sprintf("t.%s",strings.Title(varname[0]) )
+				fnFormat += fmt.Sprintf("tmvv.%s",strings.Title(varname[0]) )
+				jssetters += fmt.Sprintf(`
+					t.%s = %s`,strings.Title(varname[0]),strings.Title(varname[0]) )
 				if ind < varsslen {
 					fnFormat += ","
 				}
 				funcfields = append(funcfields, fmt.Sprintf("%s %s", strings.Title(varname[0]), varname[1] ))
 			}
+			jstrbits += fmt.Sprintf(`function %s(%s, cb){
+				var t = {}
+				%s
+				jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
+			}
+`, v.Name, strings.Replace(fnFormat, "tmvv.", "",  -1  ),jssetters, v.Name)
 			if !strings.Contains( v.Returntype ,"(" ){
 				responseformat  = fmt.Sprintf("resp[\"%s\"]", v.Returntype )
 			} else {
@@ -99,8 +100,8 @@ func  main() {
 				%s
 			}
 			decoder := json.NewDecoder(r.Body)
-			 var t Payload%s
-			 err := decoder.Decode(&t)
+			 var tmvv Payload%s
+			 err := decoder.Decode(&tmvv)
 			 if err != nil {
 			 	w.WriteHeader(http.StatusInternalServerError)
 			    w.Write([]byte(fmt.Sprintf("{\"error\":%%s}",err.Error())))
@@ -119,7 +120,13 @@ func  main() {
 		%s
 		}
 	})`, strfuncs)
+	
+	jsstr = fmt.Sprintf(`http.HandleFunc("/funcfactory.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript")
+		%s
+	})`, fmt.Sprintf( "w.Write([]byte(`%s`) )", jstrbits)	)
 
+	cfg.AddToMainFunc(jsstr)
 	cfg.AddToMainFunc(strtemplate)
 
 }
