@@ -7,7 +7,7 @@ A GopherSauce package to convert template and func tags into accessible Javascri
 ### Install
 Add this import tag to the root of your `gos.gxml` file. Within the `<gos>` tag. This will activate momentum within your project. Remember to include the funcfactory within the pages you wish to use these functions. `<script src="/funcfactory.js"></script>`
 
-		<import src="github.com/cheikhshift/momentum/gos.gxml"
+	<import src="github.com/cheikhshift/momentum/gos.gxml">
 
 ### Templates
 Each template created will have a JS function equivalent with the same name. The format of the generated functions are as follows :	
