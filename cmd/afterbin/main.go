@@ -43,7 +43,6 @@ func  main() {
 	cfg.AddToMainFunc(strtemplate)
 	
 	strfuncs = ""
-	jstrbits = ""
 	for _,v := range cfg.Methods.Methods {
 
 
