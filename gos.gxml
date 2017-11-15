@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gos>
+	<!-- xml docs : http://golangserver.com/docs/markup.html -->
+	<deploy>package</deploy>
+	<port>8080</port>
+	<package>momentum</package>
+	<domain></domain><!-- Cookie domain -->
+	<main>	
+	//psss go code here : func main()
+	</main>
+	<sh>echo "INSTALLING AFTERBIN"</sh>
+	<sh>go install github.com/cheikhshift/momentum/cmd/afterbin</sh>
+	<sh>afterbin</sh>
+	<key>a very very very very secret key</key>
+	
+	<header> 
+	</header>
+	<methods>
+		
+	</methods>
+
+	<templates>
+		<template name="ang" tmpl="ang" struct="" /> 
+		<template name="server" tmpl="server" struct="" /> 
+		<template name="jquery" tmpl="jquery" struct="" /> 
+	</templates>
+	<endpoints>
+  
+	</endpoints>
+</gos>
