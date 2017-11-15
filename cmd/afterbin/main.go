@@ -26,7 +26,7 @@ func  main() {
 		`, v.Name, v.Name)
 
 		jstrbits += fmt.Sprintf(`function %s(dataOfInterface, cb){ jsrequestmomentum("/momentum/templates", {name: "%s", payload: JSON.stringify(dataOfInterface)},"POST",  cb) }
-			`, v.Name,v.Name)
+`, v.Name,v.Name)
 		
 	}
 
