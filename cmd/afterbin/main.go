@@ -20,7 +20,6 @@ func  main() {
 	fmt.Println("Welcome to Momentum Afterbin.")
 	fmt.Println("Remember to load momentum on HTML your pages : {{ server }} or <script src=\"/funcfactory.js\"></script>")
 	fmt.Println("Converting Templates and Func tags into accessible JS functions.")
-	fmt.Println("Any web service service URI can be accessed with Ape. ")
 	cfg,err := core.Config()
 	if err != nil {
 		panic(err)
