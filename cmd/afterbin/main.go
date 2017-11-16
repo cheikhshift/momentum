@@ -73,7 +73,6 @@ func  main() {
 	                	strret = ""
 	                    limtlen = len(fn.Type.Results.List) - 1
 	                	for indx, fieldss := range fn.Type.Results.List {
-
 	                		limtlenv := len(fieldss.Names) -1 
 	                	    typeExpr := fieldss.Type
 	                		start := typeExpr.Pos() - 2 
@@ -94,7 +93,7 @@ func  main() {
 	         }
         }
     }
-    
+
  
 
 	var strfuncs, strtemplate,jsstr,jstrbits string
@@ -127,7 +126,9 @@ func  main() {
 	for _,v := range cfg.Methods.Methods {
 
 			if v.Man == "exp" {
-
+				if fnParamMap[v.Name] == "" {
+						fmt.Println("☣️  Error parsing :", v.Name, "Please make sure you are not using naked return values. Please use Named return values with your <func> tags")
+				} else {
 			varss := strings.Split(fnParamMap[v.Name], ",")
 			responseformat := ``
 			fnFormat := ``
@@ -196,7 +197,10 @@ func  main() {
 			%s
 			w.Write([]byte(mResponse(resp)))
 		`, v.Name, v.Name, strings.Join(funcfields, "\n" ) ,  v.Name, responseformat  ,v.Name, fnFormat,binderString)
+			
+			
 			}
+		}
 	}
 	strtemplate = fmt.Sprintf(`http.HandleFunc("/momentum/funcs", func(w http.ResponseWriter, r *http.Request) {
 
