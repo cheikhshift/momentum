@@ -4,7 +4,17 @@ import (
 	"github.com/cheikhshift/gos/core"
 	"fmt"
 	"strings"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"reflect"
+	"io/ioutil"
 )
+
+func getNodeType(node ast.Node) string {
+	val := reflect.ValueOf(node).Elem()
+	return val.Type().Name()
+}
 
 func  main() {
 	fmt.Println("Welcome to Momentum Afterbin.")
@@ -16,6 +26,77 @@ func  main() {
 		panic(err)
 	}
 	//add template paths
+	
+	fnParamMap := make(map[string]string)
+	fnReturnMap := make(map[string]string)
+	// Create the AST by parsing src.
+	fset := token.NewFileSet() // positions are relative to fset
+	f, err := parser.ParseFile(fset, cfg.Output, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := ioutil.ReadFile(cfg.Output)
+	if err != nil {
+		panic(err)
+	}
+
+	strbody := string(body)
+
+
+     for _, d := range f.Decls {
+         if fn, isFn := d.(*ast.FuncDecl); isFn {
+                if fn.Type.Results != nil && fn.Type.Params != nil {
+	                if len(fn.Type.Params.List) > 0 && len(fn.Type.Params.List[0].Names) > 0 &&  len(fn.Type.Results.List) > 0  && len(fn.Type.Results.List[0].Names) > 0 {
+	       
+
+	                	strret := "" 
+	                	limtlen := len(fn.Type.Params.List) - 1
+	                	for indx, fieldss := range fn.Type.Params.List {
+
+	                		limtlenv := len(fieldss.Names) - 1
+	                	    typeExpr :=  fieldss.Type
+	                		start := typeExpr.Pos() - 2 
+	        				end := typeExpr.End() - 1
+	                		for indxv, fieldnamesubs := range fieldss.Names {
+	                			strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
+	                			if indxv < limtlenv {
+									strret += ","
+								}
+	                		}
+	                		
+	                		if indx < limtlen {
+								strret += ","
+							}
+	                	}
+	                	fnParamMap[ strings.Replace(fn.Name.Name, "Net", "", 1 ) ] = strret
+	                	strret = ""
+	                    limtlen = len(fn.Type.Results.List) - 1
+	                	for indx, fieldss := range fn.Type.Results.List {
+
+	                		limtlenv := len(fieldss.Names) -1 
+	                	    typeExpr := fieldss.Type
+	                		start := typeExpr.Pos() - 2 
+	        				end := typeExpr.End() - 1
+	                		for indxv, fieldnamesubs := range fieldss.Names {
+	                			strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
+	                			if indxv < limtlenv {
+									strret += ","
+								}
+	                		}
+	                		
+	                		if indx < limtlen {
+								strret += ","
+							}
+	                	}
+	                	fnReturnMap[strings.Replace(fn.Name.Name, "Net", "", 1 ) ] = strret
+	            	}
+	         }
+        }
+    }
+    
+ 
+
 	var strfuncs, strtemplate,jsstr,jstrbits string
 
 	for _, v := range cfg.Templates.Templates {
@@ -45,9 +126,9 @@ func  main() {
 	strfuncs = ""
 	for _,v := range cfg.Methods.Methods {
 
-
 			if v.Man == "exp" {
-			varss := strings.Split(v.Variables, ",")
+
+			varss := strings.Split(fnParamMap[v.Name], ",")
 			responseformat := ``
 			fnFormat := ``
 			funcfields := []string{}
@@ -73,7 +154,7 @@ func  main() {
 			if !strings.Contains( v.Returntype ,"(" ){
 				responseformat  = fmt.Sprintf("resp[\"%s\"]", v.Returntype )
 			} else {
-				parsable := strings.Split(strings.Replace(strings.Replace(strings.Replace(v.Returntype, "(","", -1), ")", "" , -1), ", ",",", -1 ), ",")
+				parsable := strings.Split(fnReturnMap[v.Name], ",")
 				parsablelen := len(parsable) - 1
 				for ind, variabl := range parsable {
 				varname := strings.Split(variabl, " ")
