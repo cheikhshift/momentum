@@ -20,9 +20,10 @@ Notes :  Replace TemplateName with the string specified as the name attribute of
 ### Funcs
 Each `func` tag within your `<methods>` section will generate a JS equivalent function. To better visualize this follow the example below.
 Notes : Channels are not supported as a valid type within `var` and `return` attributes of your func tag. Using the term `args ...interface` will not work as well. This is why the `<func>` tag was introduced, to provide users with a tag to explicitly declare variable types. With this in mind `<method>` tags will not work with JS function factory because it relies `args ..interface` to pass variables.
-A `<func>` tag is declared within the methods section of a `gos.gxml` file.
 
-	   <func name="TestAdd" var="varx string,numv int" return="(test string, err error)">
+A sample `<func>` tag is declared within the methods section of a `gos.gxml` file. The return type specifies names returned values.
+
+	 <func name="TestAdd" var="varx string,numv int" return="(test string, err error)">
 		err = errors.New("error test on GOOOO")	
 			test  = "Test" + varx
 			return 
