@@ -36,4 +36,4 @@ The previous func tag will generate JS function : (The variable definitions carr
 
 Notes :  ObjectResponse variable is an object with your function's returned values. With this `<func>` tag,  the ObjectResponse will have keys `err` and `test` following the tag's return attribute. Success is an indication of successful method invocation. On error, Object response will have one key : `error`, which is a string explanation of why the request failed.
 
-**More notes : You must specify the names of the return types as well. These names will be used as key names to your response oject.
+**More notes : You must specify the names of the return types as well, AKA `Named returned values`. These names will be used as key names to your response oject.
