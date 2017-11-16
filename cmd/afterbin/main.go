@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/cheikhshift/gos/core"
 	"fmt"
-	"strings"
+	"github.com/cheikhshift/gos/core"
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"reflect"
 	"io/ioutil"
+	"reflect"
+	"strings"
 )
 
 func getNodeType(node ast.Node) string {
@@ -16,16 +16,16 @@ func getNodeType(node ast.Node) string {
 	return val.Type().Name()
 }
 
-func  main() {
+func main() {
 	fmt.Println("Welcome to Momentum Afterbin.")
 	fmt.Println("Remember to load momentum on HTML your pages : {{ server }} or <script src=\"/funcfactory.js\"></script>")
 	fmt.Println("Converting Templates and Func tags into accessible JS functions.")
-	cfg,err := core.Config()
+	cfg, err := core.Config()
 	if err != nil {
 		panic(err)
 	}
 	//add template paths
-	
+
 	fnParamMap := make(map[string]string)
 	fnReturnMap := make(map[string]string)
 	// Create the AST by parsing src.
@@ -42,71 +42,67 @@ func  main() {
 
 	strbody := string(body)
 
+	for _, d := range f.Decls {
+		if fn, isFn := d.(*ast.FuncDecl); isFn {
+			if fn.Type.Results != nil && fn.Type.Params != nil {
+				if len(fn.Type.Params.List) > 0 && len(fn.Type.Params.List[0].Names) > 0 && len(fn.Type.Results.List) > 0 && len(fn.Type.Results.List[0].Names) > 0 {
 
-     for _, d := range f.Decls {
-         if fn, isFn := d.(*ast.FuncDecl); isFn {
-                if fn.Type.Results != nil && fn.Type.Params != nil {
-	                if len(fn.Type.Params.List) > 0 && len(fn.Type.Params.List[0].Names) > 0 &&  len(fn.Type.Results.List) > 0  && len(fn.Type.Results.List[0].Names) > 0 {
-	       
+					strret := ""
+					limtlen := len(fn.Type.Params.List) - 1
+					for indx, fieldss := range fn.Type.Params.List {
 
-	                	strret := "" 
-	                	limtlen := len(fn.Type.Params.List) - 1
-	                	for indx, fieldss := range fn.Type.Params.List {
-
-	                		limtlenv := len(fieldss.Names) - 1
-	                	    typeExpr :=  fieldss.Type
-	                		start := typeExpr.Pos() - 2 
-	        				end := typeExpr.End() - 1
-	                		for indxv, fieldnamesubs := range fieldss.Names {
-	                			strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
-	                			if indxv < limtlenv {
-									strret += ","
-								}
-	                		}
-	                		
-	                		if indx < limtlen {
+						limtlenv := len(fieldss.Names) - 1
+						typeExpr := fieldss.Type
+						start := typeExpr.Pos() - 2
+						end := typeExpr.End() - 1
+						for indxv, fieldnamesubs := range fieldss.Names {
+							strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
+							if indxv < limtlenv {
 								strret += ","
 							}
-	                	}
-	                	fnParamMap[ strings.Replace(fn.Name.Name, "Net", "", 1 ) ] = strret
-	                	strret = ""
-	                    limtlen = len(fn.Type.Results.List) - 1
-	                	for indx, fieldss := range fn.Type.Results.List {
-	                		limtlenv := len(fieldss.Names) -1 
-	                	    typeExpr := fieldss.Type
-	                		start := typeExpr.Pos() - 2 
-	        				end := typeExpr.End() - 1
-	                		for indxv, fieldnamesubs := range fieldss.Names {
-	                			strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
-	                			if indxv < limtlenv {
-									strret += ","
-								}
-	                		}
-	                		
-	                		if indx < limtlen {
+						}
+
+						if indx < limtlen {
+							strret += ","
+						}
+					}
+					fnParamMap[strings.Replace(fn.Name.Name, "Net", "", 1)] = strret
+					strret = ""
+					limtlen = len(fn.Type.Results.List) - 1
+					for indx, fieldss := range fn.Type.Results.List {
+						limtlenv := len(fieldss.Names) - 1
+						typeExpr := fieldss.Type
+						start := typeExpr.Pos() - 2
+						end := typeExpr.End() - 1
+						for indxv, fieldnamesubs := range fieldss.Names {
+							strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
+							if indxv < limtlenv {
 								strret += ","
 							}
-	                	}
-	                	fnReturnMap[strings.Replace(fn.Name.Name, "Net", "", 1 ) ] = strret
-	            	}
-	         }
-        }
-    }
+						}
 
- 
+						if indx < limtlen {
+							strret += ","
+						}
+					}
+					fnReturnMap[strings.Replace(fn.Name.Name, "Net", "", 1)] = strret
+				}
+			}
+		}
+	}
 
-	var strfuncs, strtemplate,jsstr,jstrbits string
+	var strfuncs, strtemplate, jsstr, jstrbits string
 
 	for _, v := range cfg.Templates.Templates {
-		strfuncs +=  fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
+		strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
 			w.Header().Set("Content-Type", "text/html")
 			tmplRendered := Net%s(r.FormValue("payload"))
 			w.Write([]byte(tmplRendered))
 		`, v.Name, v.Name)
 
 		jstrbits += fmt.Sprintf(`function %s(dataOfInterface, cb){ jsrequestmomentum("/momentum/templates", {name: "%s", payload: JSON.stringify(dataOfInterface)},"POST",  cb) }
-`, v.Name,v.Name)
-		
+`, v.Name, v.Name)
+
 	}
 
 	strtemplate = fmt.Sprintf(`http.HandleFunc("/momentum/templates", func(w http.ResponseWriter, r *http.Request) {
@@ -117,68 +113,65 @@ func  main() {
 		}
 	})`, strfuncs)
 
-
-	
 	cfg.AddToMainFunc(strtemplate)
-	
-	strfuncs = ""
-	for _,v := range cfg.Methods.Methods {
 
-			if v.Man == "exp" {
-				if fnParamMap[v.Name] == "" {
-						fmt.Println("☣️  Error parsing :", v.Name, "Please make sure you are not using naked return values. Please use Named return values with your <func> tags")
-				} else {
-			varss := strings.Split(fnParamMap[v.Name], ",")
-			responseformat := ``
-			fnFormat := ``
-			funcfields := []string{}
-			binderString := ``
-			jssetters := ``
-			varsslen := len(varss) - 1
-			for ind, variabl := range varss {
-				varname := strings.Split(variabl, " ")
-				fnFormat += fmt.Sprintf("tmvv.%s",strings.Title(varname[0]) )
-				jssetters += fmt.Sprintf(`
-	t.%s = %s`,strings.Title(varname[0]),strings.Title(varname[0]) )
-				if ind < varsslen {
-					fnFormat += ","
+	strfuncs = ""
+	for _, v := range cfg.Methods.Methods {
+
+		if v.Man == "exp" {
+			if fnParamMap[v.Name] == "" {
+				fmt.Println("☣️  Error parsing :", v.Name, "Please make sure you are not using naked return values. Please use Named return values with your <func> tags")
+			} else {
+				varss := strings.Split(fnParamMap[v.Name], ",")
+				responseformat := ``
+				fnFormat := ``
+				funcfields := []string{}
+				binderString := ``
+				jssetters := ``
+				varsslen := len(varss) - 1
+				for ind, variabl := range varss {
+					varname := strings.Split(variabl, " ")
+					fnFormat += fmt.Sprintf("tmvv.%s", strings.Title(varname[0]))
+					jssetters += fmt.Sprintf(`
+	t.%s = %s`, strings.Title(varname[0]), strings.Title(varname[0]))
+					if ind < varsslen {
+						fnFormat += ","
+					}
+					funcfields = append(funcfields, fmt.Sprintf("%s %s", strings.Title(varname[0]), varname[1]))
 				}
-				funcfields = append(funcfields, fmt.Sprintf("%s %s", strings.Title(varname[0]), varname[1] ))
-			}
-			jstrbits += fmt.Sprintf(`function %s(%s, cb){
+				jstrbits += fmt.Sprintf(`function %s(%s, cb){
 	var t = {}
 	%s
 	jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
 }
-`, v.Name, strings.Replace(fnFormat, "tmvv.", "",  -1  ),jssetters, v.Name)
-			if !strings.Contains( v.Returntype ,"(" ){
-				responseformat  = fmt.Sprintf("resp[\"%s\"]", v.Returntype )
-			} else {
-				parsable := strings.Split(fnReturnMap[v.Name], ",")
-				parsablelen := len(parsable) - 1
-				for ind, variabl := range parsable {
-				varname := strings.Split(variabl, " ")
+`, v.Name, strings.Replace(fnFormat, "tmvv.", "", -1), jssetters, v.Name)
+				if !strings.Contains(v.Returntype, "(") {
+					responseformat = fmt.Sprintf("resp[\"%s\"]", v.Returntype)
+				} else {
+					parsable := strings.Split(fnReturnMap[v.Name], ",")
+					parsablelen := len(parsable) - 1
+					for ind, variabl := range parsable {
+						varname := strings.Split(variabl, " ")
 
-				responseformat += fmt.Sprintf("resp%s%v",varname[0],ind)
-				if strings.Contains(variabl, "error"){
-				binderString += fmt.Sprintf(`
+						responseformat += fmt.Sprintf("resp%s%v", varname[0], ind)
+						if strings.Contains(variabl, "error") {
+							binderString += fmt.Sprintf(`
 				if resp%s%v != nil {
 					resp["%s"] = resp%s%v.Error()
 				} else {
 					resp["%s"] = nil
-				}`,varname[0], ind, varname[0], varname[0], ind, varname[0] )
-				} else {
-				binderString += fmt.Sprintf(`
-				resp["%s"] = resp%s%v`, varname[0], varname[0], ind )
+				}`, varname[0], ind, varname[0], varname[0], ind, varname[0])
+						} else {
+							binderString += fmt.Sprintf(`
+				resp["%s"] = resp%s%v`, varname[0], varname[0], ind)
+						}
+						if ind < parsablelen {
+							responseformat += ","
+						}
+					}
 				}
-				if ind < parsablelen {
-					responseformat += ","
-				}
-				}
-			} 
-			
 
-			strfuncs +=  fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
+				strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
 			w.Header().Set("Content-Type", "application/json")
 			type Payload%s struct {
 				%s
@@ -195,9 +188,8 @@ func  main() {
 			%s := Net%s(%s)
 			%s
 			w.Write([]byte(mResponse(resp)))
-		`, v.Name, v.Name, strings.Join(funcfields, "\n" ) ,  v.Name, responseformat  ,v.Name, fnFormat,binderString)
-			
-			
+		`, v.Name, v.Name, strings.Join(funcfields, "\n"), v.Name, responseformat, v.Name, fnFormat, binderString)
+
 			}
 		}
 	}
@@ -208,11 +200,11 @@ func  main() {
 		%s
 		}
 	})`, strfuncs)
-	
+
 	jsstr = fmt.Sprintf(`http.HandleFunc("/funcfactory.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript")
 		%s
-	})`, fmt.Sprintf( "w.Write([]byte(`%s`) )", jstrbits)	)
+	})`, fmt.Sprintf("w.Write([]byte(`%s`) )", jstrbits))
 
 	cfg.AddToMainFunc(jsstr)
 	cfg.AddToMainFunc(strtemplate)
