@@ -19,6 +19,7 @@ Notes :  Replace TemplateName with the string specified as the name attribute of
 
 ### Funcs
 Each `func` tag within your `<methods>` section will generate a JS equivalent function. To better visualize this follow the example below.
+Notes : Channels are not supported as a valid type within `var` and `return` attributes of your func tag.
 A `<func>` tag is declared within the methods section of a `gos.gxml` file.
 
 	   <func name="TestAdd" var="varx string,numv int" return="(test string, err error)">
@@ -32,4 +33,6 @@ The previous func tag will generate JS function : (The variable definitions carr
 	function TestAdd(Varx,Numv, function callback(ObjectResponse, success) )
 
 
-Notes :  ObjectResponse variable is an object with your function's returned values. With this `<func>` tag,  the ObjectResponse will have keys `err` and `test` following the tag's return attribute. Success is an indication of successful method invocation. On error, Object response will have one key : `error`, which is a string explanation of why the request failed. 
+Notes :  ObjectResponse variable is an object with your function's returned values. With this `<func>` tag,  the ObjectResponse will have keys `err` and `test` following the tag's return attribute. Success is an indication of successful method invocation. On error, Object response will have one key : `error`, which is a string explanation of why the request failed.
+
+**More notes : You must specify the names of the return types as well. These names will be used as key names to your response oject.
