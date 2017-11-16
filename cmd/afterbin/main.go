@@ -44,9 +44,8 @@ func main() {
 
 	for _, d := range f.Decls {
 		if fn, isFn := d.(*ast.FuncDecl); isFn {
-			if fn.Type.Results != nil && fn.Type.Params != nil {
-				if len(fn.Type.Params.List) > 0 && len(fn.Type.Params.List[0].Names) > 0 && len(fn.Type.Results.List) > 0 && len(fn.Type.Results.List[0].Names) > 0 {
 
+			if fn.Type.Results != nil && fn.Type.Params != nil {
 					strret := ""
 					limtlen := len(fn.Type.Params.List) - 1
 					for indx, fieldss := range fn.Type.Params.List {
@@ -86,7 +85,7 @@ func main() {
 						}
 					}
 					fnReturnMap[strings.Replace(fn.Name.Name, "Net", "", 1)] = strret
-				}
+				
 			}
 		}
 	}
@@ -114,12 +113,11 @@ func main() {
 	})`, strfuncs)
 
 	cfg.AddToMainFunc(strtemplate)
-
 	strfuncs = ""
 	for _, v := range cfg.Methods.Methods {
 
 		if v.Man == "exp" {
-			if fnParamMap[v.Name] == "" {
+			if fnReturnMap[v.Name] == "" {
 				fmt.Println("☣️  Error parsing :", v.Name, "Please make sure you are not using naked return values. Please use Named return values with your <func> tags")
 			} else {
 				varss := strings.Split(fnParamMap[v.Name], ",")
@@ -131,20 +129,27 @@ func main() {
 				varsslen := len(varss) - 1
 				for ind, variabl := range varss {
 					varname := strings.Split(variabl, " ")
+					if len(varname) > 1 {
 					fnFormat += fmt.Sprintf("tmvv.%s", strings.Title(varname[0]))
 					jssetters += fmt.Sprintf(`
 	t.%s = %s`, strings.Title(varname[0]), strings.Title(varname[0]))
 					if ind < varsslen {
 						fnFormat += ","
 					}
-					funcfields = append(funcfields, fmt.Sprintf("%s %s", strings.Title(varname[0]), varname[1]))
+					
+					funcfields = append(funcfields, fmt.Sprintf("%s %s", fmt.Sprintf("%s", strings.Title(varname[0]) ), varname[1] ))
+					}
 				}
-				jstrbits += fmt.Sprintf(`function %s(%s, cb){
+				comma := ","
+				if fnFormat == "" {
+					comma = ""
+				}
+				jstrbits += fmt.Sprintf(`function %s(%s %s cb){
 	var t = {}
 	%s
 	jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
 }
-`, v.Name, strings.Replace(fnFormat, "tmvv.", "", -1), jssetters, v.Name)
+`, v.Name, strings.Replace(fnFormat, "tmvv.", "", -1),comma, jssetters, v.Name)
 				if !strings.Contains(v.Returntype, "(") {
 					responseformat = fmt.Sprintf("resp[\"%s\"]", v.Returntype)
 				} else {
