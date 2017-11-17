@@ -41,6 +41,8 @@ Notes :  ObjectResponse variable is an object with your function's returned valu
 
 **More notes : You must specify the names of the return types as well, AKA `Named returned values`. These names will be used as key names to your response oject.
 
+*** Angular notes : If you plan on using Angular JS, use this $scope function to update your data after setting it within your callback `$scope.$apply();`.
+
 #### Api format
 You can access each of your functions via server URI `/momentum/funcs`.
 
