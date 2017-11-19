@@ -5,6 +5,7 @@
 	<port>8080</port>
 	<package>momentum</package>
 	<domain></domain><!-- Cookie domain -->
+	<output>momentum.go</output>
 	<main>	
 	//psss go code here : func main()
 	</main>

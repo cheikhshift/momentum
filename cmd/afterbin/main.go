@@ -46,46 +46,46 @@ func main() {
 		if fn, isFn := d.(*ast.FuncDecl); isFn {
 
 			if fn.Type.Results != nil && fn.Type.Params != nil {
-					strret := ""
-					limtlen := len(fn.Type.Params.List) - 1
-					for indx, fieldss := range fn.Type.Params.List {
+				strret := ""
+				limtlen := len(fn.Type.Params.List) - 1
+				for indx, fieldss := range fn.Type.Params.List {
 
-						limtlenv := len(fieldss.Names) - 1
-						typeExpr := fieldss.Type
-						start := typeExpr.Pos() - 2
-						end := typeExpr.End() - 1
-						for indxv, fieldnamesubs := range fieldss.Names {
-							strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
-							if indxv < limtlenv {
-								strret += ","
-							}
-						}
-
-						if indx < limtlen {
+					limtlenv := len(fieldss.Names) - 1
+					typeExpr := fieldss.Type
+					start := typeExpr.Pos() - 2
+					end := typeExpr.End() - 1
+					for indxv, fieldnamesubs := range fieldss.Names {
+						strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
+						if indxv < limtlenv {
 							strret += ","
 						}
 					}
-					fnParamMap[strings.Replace(fn.Name.Name, "Net", "", 1)] = strret
-					strret = ""
-					limtlen = len(fn.Type.Results.List) - 1
-					for indx, fieldss := range fn.Type.Results.List {
-						limtlenv := len(fieldss.Names) - 1
-						typeExpr := fieldss.Type
-						start := typeExpr.Pos() - 2
-						end := typeExpr.End() - 1
-						for indxv, fieldnamesubs := range fieldss.Names {
-							strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
-							if indxv < limtlenv {
-								strret += ","
-							}
-						}
 
-						if indx < limtlen {
+					if indx < limtlen {
+						strret += ","
+					}
+				}
+				fnParamMap[strings.Replace(fn.Name.Name, "Net", "", 1)] = strret
+				strret = ""
+				limtlen = len(fn.Type.Results.List) - 1
+				for indx, fieldss := range fn.Type.Results.List {
+					limtlenv := len(fieldss.Names) - 1
+					typeExpr := fieldss.Type
+					start := typeExpr.Pos() - 2
+					end := typeExpr.End() - 1
+					for indxv, fieldnamesubs := range fieldss.Names {
+						strret += fmt.Sprintf("%s%s", fieldnamesubs, strbody[start:end])
+						if indxv < limtlenv {
 							strret += ","
 						}
 					}
-					fnReturnMap[strings.Replace(fn.Name.Name, "Net", "", 1)] = strret
-				
+
+					if indx < limtlen {
+						strret += ","
+					}
+				}
+				fnReturnMap[strings.Replace(fn.Name.Name, "Net", "", 1)] = strret
+
 			}
 		}
 	}
@@ -130,14 +130,14 @@ func main() {
 				for ind, variabl := range varss {
 					varname := strings.Split(variabl, " ")
 					if len(varname) > 1 {
-					fnFormat += fmt.Sprintf("tmvv.%s", strings.Title(varname[0]))
-					jssetters += fmt.Sprintf(`
+						fnFormat += fmt.Sprintf("tmvv.%s", strings.Title(varname[0]))
+						jssetters += fmt.Sprintf(`
 	t.%s = %s`, strings.Title(varname[0]), strings.Title(varname[0]))
-					if ind < varsslen {
-						fnFormat += ","
-					}
-					
-					funcfields = append(funcfields, fmt.Sprintf("%s %s", fmt.Sprintf("%s", strings.Title(varname[0]) ), varname[1] ))
+						if ind < varsslen {
+							fnFormat += ","
+						}
+
+						funcfields = append(funcfields, fmt.Sprintf("%s %s", fmt.Sprintf("%s", strings.Title(varname[0])), varname[1]))
 					}
 				}
 				comma := ","
@@ -149,7 +149,7 @@ func main() {
 	%s
 	jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
 }
-`, v.Name, strings.Replace(fnFormat, "tmvv.", "", -1),comma, jssetters, v.Name)
+`, v.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, v.Name)
 				if !strings.Contains(v.Returntype, "(") {
 					responseformat = fmt.Sprintf("resp[\"%s\"]", v.Returntype)
 				} else {
