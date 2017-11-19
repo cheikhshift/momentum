@@ -6,6 +6,10 @@ Generate RPC functions and Javascript libraries with your Go Code.
 2. Run `$ momentum-cli` within the directory you wish to generate `http.Handlers` of..
 3. Add Handlers to your MUX or http handler. Read the [File properties and functions](#file-properties-and-functions) section to view information about the generated code.
 
+## Install
+
+	go install github.com/cheikhshift/momentum/cmd/momentum-cli
+
 ## Example
 The following function will be parsed by momentum-cli :
 
