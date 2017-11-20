@@ -50,7 +50,7 @@ Use this function to chain multiple Momentum handler with one path,
 Serve RPC generated javascript functions library. 
 
 	func MomentumJSChain(f http.HandlerFunc) http.HandlerFunc
-Use this function to chain multiple Momentum javascript libraries.
+Use this function to chain multiple generated Momentum javascript libraries.
 
 ## Sample code :
 
