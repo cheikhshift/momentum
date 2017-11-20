@@ -14,10 +14,16 @@ Generate RPC functions and Javascript libraries with your Go Code.
 The following function will be parsed by momentum-cli :
 
 	// RPC
-	func RPCTtest(input int) (result int ) {
+	func RPCTest(input int) (result int ) {
 		result = input * 400
 		return		
 	}	
+
+The previous func  will generate JS function : (The variable definitions carry over to javascript.)
+
+	function RPCTest(Input , function callback(ObjectResponse, success) )
+
+Notes : Within callback function parameter `ObjectResponse` (javascript type object) the response key `result` will be available. Following the named variables provided. Callback function parameter `success` (javascript type boolean) is optional and indicates a successful RPC call to the server. If `success` is false, `ObjectResponse` will have one object key, which will be `error`. `error` is a string message of why the request has failed.
 
 # What is generated?
 Momentum will generate an additional go file. This file will have the same package name as its neighbors (go files in directory you ran command).
