@@ -198,7 +198,7 @@ func main() {
 			 err := decoder.Decode(&tmvv)
 			 if err != nil {
 			 	w.WriteHeader(http.StatusInternalServerError)
-			    w.Write([]byte(fmt.Sprintf("{\"error\":\"%%s\"}",err.Error())))
+			    w.Write([]byte(fmt.Sprintf("{\"error\":\"JSON : %%s\"}",err.Error())))
 			    return
 			 }
 			resp := bson.M{}
