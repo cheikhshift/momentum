@@ -32,7 +32,7 @@ Momentum will generate an additional go file. This file will have the same packa
 
 	var FuncFactory =  "/funcfactory.js"
 
-String path to generated javascript RPC library. Use this path with MomentumJS handler function. Include a script tag on your HTML pages with this URI (or other URI as long as it is using the MomentumJS handler) to load the generated javascript functions.
+String path to generated javascript RPC library. Use this path with MomentumJS handler function. Include a script tag on your HTML pages with this URI as the tag's `src` attribute (or other URI as long as it is using the MomentumJS handler) to load the generated javascript functions.
 
 	var MomentumURI = "/momentum/funcs"
 
