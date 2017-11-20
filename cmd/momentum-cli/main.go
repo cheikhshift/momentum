@@ -105,12 +105,15 @@ func main() {
 												strret += ","
 											}
 										}
-										fnReturnMap[fn.Name.Name] = strret
-
-									} else {
-										fnReturnMap[fn.Name.Name] = "result "
+										if strret != "" {
+											fnReturnMap[fn.Name.Name] = strret
+										} else {
+											fnReturnMap[fn.Name.Name] = "result "
 										fmt.Println("No named returned variable found, assume your result to be in json key `result`.")
-									}
+										}
+									} 
+
+									
 
 									//build rpc method
 									varss := strings.Split(fnParamMap[fn.Name.Name], ",")
@@ -145,6 +148,25 @@ func main() {
 `, fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, fn.Name.Name)
 
 									parsable := strings.Split(fnReturnMap[fn.Name.Name], ",")
+									if fnReturnMap[fn.Name.Name] == "" {
+															strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
+			w.Header().Set("Content-Type", "application/json")
+			type Payload%s struct {
+				%s
+			}
+			decoder := json.NewDecoder(r.Body)
+			 var tmvv Payload%s
+			 err := decoder.Decode(&tmvv)
+			 if err != nil {
+			 	w.WriteHeader(http.StatusInternalServerError)
+			    w.Write([]byte(fmt.Sprintf("{\"error\":\"%%s\"}",err.Error())))
+			    return
+			 }
+			resp := bson.M{}
+			%s(%s)
+			w.Write([]byte(mResponse(resp)))
+		`, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, fn.Name.Name, fnFormat)
+									} else {
 									parsablelen := len(parsable) - 1
 									for ind, variabl := range parsable {
 										varname := strings.Split(variabl, " ")
@@ -184,6 +206,7 @@ func main() {
 			%s
 			w.Write([]byte(mResponse(resp)))
 		`, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, responseformat, fn.Name.Name, fnFormat, binderString)
+							}
 
 								}
 
@@ -197,7 +220,11 @@ func main() {
 			}
 		}
 		strtemplate = fmt.Sprintf(`func Momentum(w http.ResponseWriter, r *http.Request) {
-
+		defer func() {
+			if n := recover(); n != nil {
+				w.Write([]byte(mResponse(bson.M{"error": fmt.Sprintf("%%s", n)})))
+			}
+		}()
 		if r.FormValue("name") == "reset" {
 			return
 		%s
