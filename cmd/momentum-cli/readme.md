@@ -83,3 +83,15 @@ Use this function to chain multiple generated Momentum javascript libraries.
 		http.Handle("/", r)
 		log.Fatal(http.ListenAndServe(":8000", r))
 	}
+
+## Api format
+
+You can access each of your functions via server URI /momentum/funcs.
+
+## Get Parameters
+
+name : specifies the name of the function to invoke.
+
+## Post Body
+
+The body is used to pass a json of your function's variables/parameters. Each json key should match a correponding function variable name, with that variable's data specified as the key's value. Even if your function has no variables pass, atleast pass an empty JSON. If no data is passed momentum will return an EOF JSON error.
