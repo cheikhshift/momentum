@@ -144,6 +144,17 @@ func main() {
 									if fnFormat == "" {
 										comma = ""
 									}
+									jstrbits += fmt.Sprintf(`/**
+* RPC function : %s
+* %s
+* @namespace %s
+* @method %s
+* @params %s
+* @return %s
+*/
+`, fn.Name.Name, strings.Replace(strings.Join(checkforRPC, `
+*`), "//","" , -1 ),name,fn.Name.Name, fnParamMap[fn.Name.Name], fnReturnMap[fn.Name.Name] )
+
 									if strings.Contains(name, "main") {
 									jstrbits += fmt.Sprintf(`function %s(%s %s cb){
 	var t = {}
