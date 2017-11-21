@@ -172,8 +172,13 @@ func main() {
 									}
 
 									parsable := strings.Split(fnReturnMap[fn.Name.Name], ",")
+									var namemod string
+									if !strings.Contains(name,"main"){
+										namemod = fmt.Sprintf("%s.", name)
+									}
 									if fnReturnMap[fn.Name.Name] == "" {
-															strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s.%s" {
+
+															strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s%s" {
 			w.Header().Set("Content-Type", "application/json")
 			type Payload%s struct {
 				%s
@@ -189,7 +194,7 @@ func main() {
 			resp := bson.M{}
 			%s(%s)
 			w.Write([]byte(mResponse(resp)))
-		`, name,fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, fn.Name.Name, fnFormat)
+		`, namemod,fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, fn.Name.Name, fnFormat)
 									} else {
 									parsablelen := len(parsable) - 1
 									for ind, variabl := range parsable {
@@ -212,7 +217,7 @@ func main() {
 										}
 									}
 
-									strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s.%s" {
+									strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s%s" {
 			w.Header().Set("Content-Type", "application/json")
 			type Payload%s struct {
 				%s
@@ -229,7 +234,10 @@ func main() {
 			%s := %s(%s)
 			%s
 			w.Write([]byte(mResponse(resp)))
-		`,name, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, responseformat, fn.Name.Name, fnFormat, binderString)
+		`,namemod, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, responseformat, fn.Name.Name, fnFormat, binderString)
+							
+
+
 							}
 
 								}
