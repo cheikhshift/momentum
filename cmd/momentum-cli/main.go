@@ -339,7 +339,7 @@ func main() {
 								        }
 								    }
 								   
-								   	// http.Handler , Servers javascript library
+								   	// http.Handler , Serves javascript library
 									func MomentumJS(w http.ResponseWriter, r *http.Request) {
 			if !strings.Contains(w.Header().Get("content-type"), "/javascript" ) { 
 		w.Header().Set("Content-Type", "text/javascript")
