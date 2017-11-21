@@ -33,9 +33,7 @@ func main() {
 		fmt.Println("Processing package :", name)
 		for fname, _ := range pkg.Files {
 			if strings.Contains(fname, "momentum_") {
-
 				os.Remove(fname)
-
 			} else {
 				fset := token.NewFileSet() // positions are relative to fset
 				f, err := parser.ParseFile(fset, fname, nil, parser.ParseComments)
@@ -46,6 +44,12 @@ func main() {
 				body, err := ioutil.ReadFile(fname)
 				if err != nil {
 					panic(err)
+				}
+				if !strings.Contains(name, "main") {
+					jstrbits = fmt.Sprintf(`var %s = {};
+						`, name)
+				} else {
+					jstrbits = ""
 				}
 
 				strbody := string(body)
@@ -140,16 +144,25 @@ func main() {
 									if fnFormat == "" {
 										comma = ""
 									}
+									if strings.Contains(name, "main") {
 									jstrbits += fmt.Sprintf(`function %s(%s %s cb){
 	var t = {}
 	%s
 	jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
 }
 `, fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, fn.Name.Name)
+									} else {
+										jstrbits += fmt.Sprintf(`%s["%s"] = function(%s %s cb){
+	var t = {}
+	%s
+	jsrequestmomentum("/momentum/funcs?name=%s.%s", t, "POSTJSON", cb)
+}
+`, name,fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, name,fn.Name.Name)
+									}
 
 									parsable := strings.Split(fnReturnMap[fn.Name.Name], ",")
 									if fnReturnMap[fn.Name.Name] == "" {
-															strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
+															strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s.%s" {
 			w.Header().Set("Content-Type", "application/json")
 			type Payload%s struct {
 				%s
@@ -165,7 +178,7 @@ func main() {
 			resp := bson.M{}
 			%s(%s)
 			w.Write([]byte(mResponse(resp)))
-		`, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, fn.Name.Name, fnFormat)
+		`, name,fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, fn.Name.Name, fnFormat)
 									} else {
 									parsablelen := len(parsable) - 1
 									for ind, variabl := range parsable {
@@ -188,7 +201,7 @@ func main() {
 										}
 									}
 
-									strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s" {
+									strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s.%s" {
 			w.Header().Set("Content-Type", "application/json")
 			type Payload%s struct {
 				%s
@@ -205,7 +218,7 @@ func main() {
 			%s := %s(%s)
 			%s
 			w.Write([]byte(mResponse(resp)))
-		`, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, responseformat, fn.Name.Name, fnFormat, binderString)
+		`,name, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, responseformat, fn.Name.Name, fnFormat, binderString)
 							}
 
 								}
@@ -279,7 +292,8 @@ func main() {
 										FuncFactory = "/funcfactory.js"
 										MomentumURI = "/momentum/funcs"
 									)
-
+									var jsinitbytes = []byte(%s)
+									var jsfuncs = []byte(%s)
 									%s
 
 									func mResponse(v interface{}) string {
@@ -299,14 +313,14 @@ func main() {
 								        	f(w,r)
 								        }
 								    }
-
+								   
 									func MomentumJS(w http.ResponseWriter, r *http.Request) {
 			if !strings.Contains(w.Header().Get("content-type"), "/javascript" ) { 
 		w.Header().Set("Content-Type", "text/javascript")
-			w.Write([]byte(%s) )
+			w.Write( jsinitbytes )
 		}
-		%s
-	}`, name, strtemplate,  fmt.Sprintf("` %s `",jsdepfuncs),fmt.Sprintf("w.Write([]byte(`%s`) )", jstrbits))
+		w.Write(jsfuncs)
+	}`, name, fmt.Sprintf("` %s `",jsdepfuncs),  fmt.Sprintf("` %s `",jstrbits), strtemplate )
 
 		d1 := []byte(jsstr)
 		_ = ioutil.WriteFile(fmt.Sprintf("momentum_%s.go", name), d1, 0700)
