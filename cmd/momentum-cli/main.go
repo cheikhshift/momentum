@@ -294,6 +294,11 @@ func main() {
 									)
 									var jsinitbytes = []byte(%s)
 									var jsfuncs = []byte(%s)
+
+									// Momentum http.Handler
+									// of your package. Use this with variable MomentumURI.
+									// It will give server side access to the generated javascript
+									// library.
 									%s
 
 									func mResponse(v interface{}) string {
@@ -301,12 +306,21 @@ func main() {
 										return string(data)
 									}
 
+									// Middleware
+									// Chain this with other handlers
+									// to import other momentum javascript
+									// libraries.
 								    func MomentumJSChain(f http.HandlerFunc) http.HandlerFunc {
 								        return func(w http.ResponseWriter, r *http.Request) {
 								        	MomentumJS(w, r)
 								        	f(w,r)
 								        }
 								    }
+
+								    // Middleware
+								    // Chain this with other momentum handlers
+								    // to use RPC functions from multiple 
+								    // libraries.
 									func MomentumChain(f http.HandlerFunc) http.HandlerFunc {
 								        return func(w http.ResponseWriter, r *http.Request) {
 								        	Momentum(w, r)
@@ -314,6 +328,7 @@ func main() {
 								        }
 								    }
 								   
+								   	// http.Handler , Servers javascript library
 									func MomentumJS(w http.ResponseWriter, r *http.Request) {
 			if !strings.Contains(w.Header().Get("content-type"), "/javascript" ) { 
 		w.Header().Set("Content-Type", "text/javascript")
