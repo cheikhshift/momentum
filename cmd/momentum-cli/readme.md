@@ -8,7 +8,7 @@ Generate RPC functions and Javascript libraries with your Go Code.
 
 ## Install
 
-	go install github.com/cheikhshift/momentum/cmd/momentum-cli
+	go get github.com/cheikhshift/momentum/cmd/momentum-cli
 
 ## Example
 The following function will be parsed by momentum-cli :
