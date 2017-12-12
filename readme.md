@@ -2,6 +2,9 @@
 
 A GopherSauce package to convert template and func tags into accessible Javascript functions. The goal of this project is to be able to: 1) generate your templates on your server  2) Ease access to server side functionality.
 
+## Without GopherSauce
+Download the CLI to build RPC functions without GopherSauce. Find it [here](https://github.com/cheikhshift/momentum/tree/master/cmd/momentum-cli)
+
 ## Requirements
 - [GopherSauce](http://gophersauce.com)
 
