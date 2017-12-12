@@ -10,7 +10,7 @@ Generate RPC functions and Javascript libraries with your Go Code.
 
 	go get github.com/cheikhshift/momentum/cmd/momentum-cli
 
-## Example
+## Example 1
 The following function will be parsed by momentum-cli :
 
 	// RPC
@@ -24,6 +24,52 @@ The previous func  will generate JS function : (The variable definitions carry o
 	function RPCTest(Input , function callback(ObjectResponse, success) )
 
 Notes : Within callback function parameter `ObjectResponse` (javascript type object) the object key `result` will have your function's result, following the named variables provided. Callback function parameter `success` (javascript type boolean) is optional and indicates a successful HTTP request to the server. If `success` is false, `ObjectResponse` will have one object key, which will be `error`. `error` is a string message of why the request has failed.
+
+## Example 2
+An interface function will be used with this example. The following function will be parsed by momentum-cli :
+
+	type Stk struct {
+		Var string
+	}
+	
+	// RPC
+	func (st * Stk) TestFunction () (res string) {
+		log.Println("hello")
+		log.Println(st.Var)
+		st.Var = "Newval"
+		res = "value string"
+		return 
+	}
+	
+The previous func  will generate the following JS code : (The interface initializer will be available in JS)
+
+	/**
+	* Stk
+	* @namespace main
+	* @param Obj - Object with Go interface fields.
+	* @return Stk - Object with specified interface.
+	*/
+	var Stk = function(Obj) {
+		Object.assign(this, Obj)
+	}											
+	Stk.prototype.TestFunction = function(  cb){
+		var t = {};
+		
+		var payload = {Obj : this, Params : t};
+		t.Working = true;
+		this.cb = cb;
+		jsrequestmomentum("/momentum/funcs?name=*Stk.TestFunction", payload, "POSTJSON", ObjectCallb.bind(this))
+	}
+ 
+Notes : definition of `function ObjectCallb`
+
+	function ObjectCallb(jsonobj,success) {
+		this.Working = false;
+		Object.assign(this, jsonobj.Obj)
+		this.cb(jsonobj.Result, success)
+	}
+
+
 
 # What is generated?
 Momentum will generate an additional go file. This file will have the same package name as its neighbors (go files in directory you ran command).
@@ -71,6 +117,19 @@ Use this function to chain multiple generated Momentum javascript libraries.
 		return
 	}
 
+	type Stk struct {
+	Var string
+}
+
+	// RPC
+	func (st * Stk) TestFunction () (res string) {
+		log.Println("hello")
+		log.Println(st.Var)
+		st.Var = "Newval"
+		res = "value string"
+		return 
+	}
+
 
 	func main(){
 		r := mux.NewRouter()
@@ -94,4 +153,12 @@ name : specifies the name of the function to invoke.
 
 ## Post Body
 
-The body is used to pass a json of your function's variables/parameters. Each json key should match a correponding function parameter name, with that parameter's data specified as the key's value. Even if your function has no parameters, pass atleast pass an empty JSON. If no data is passed momentum will return an EOF JSON error.
+The body is used to pass a JSON of your function's variables/parameters. Each JSON key should match a corresponding function parameter name, with that parameter's data specified as the key's value. Even if your function has no parameters, pass at least an empty JSON (`{}`). If no data is passed momentum will return an EOF JSON error.
+
+### Response format 
+With interface methods the response format differs. Here is the schema
+
+	{
+		"Obj" : {} ,// interface with updates from function
+		"Result" : {} , // result of function. Null if function returns nothing.
+	}
