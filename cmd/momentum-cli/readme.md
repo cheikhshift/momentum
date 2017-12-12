@@ -1,5 +1,5 @@
 # Momentum-cli
-Generate RPC functions and Javascript libraries with your Go Code.
+Generate JSON-RPC go handlers and Javascript libraries with your Go Code.
 
 # How it works
 1. Add  comment `RPC` to the function you wish to convert.
