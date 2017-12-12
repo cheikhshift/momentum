@@ -11,13 +11,22 @@ import (
 	"strings"
 )
 
+func Exists(arr []string, lookup string) bool {
+	for i := 0; i < len(arr); i++ {
+		if arr[i] == lookup {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	// Used GoAst example as starter
 	fmt.Println("Welcome to Momentum Aftergo.")
 	fmt.Println("Converting funcs with `RPC` in comments.")
 
 	//add template path
-
+	fnInterfaceMap := make(map[string][]string)
 	fnParamMap := make(map[string]string)
 	fnReturnMap := make(map[string]string)
 
@@ -68,7 +77,36 @@ func main() {
 									checkforRPC[i] = cmment.Text
 								}
 								if strings.Contains(strings.Join(checkforRPC, ":"), "RPC") {
+
+									
+
+									fnString := strbody[(fn.Type.Pos() - 1 ): (fn.Type.End() -1 )]								
+
+									partsstr := strings.Split(fnString, fn.Name.Name)
+
+									if strings.Contains(partsstr[0] , ")" ) {
+										partssub := strings.Split(strings.TrimSpace(partsstr[0]), " ")
+										if _, exts := fnInterfaceMap[fn.Name.Name] ; !exts {
+											fnInterfaceMap[fn.Name.Name] = []string{}
+										}
+										
+
+										intname := strings.Replace(strings.TrimSpace(partssub[len(partssub) - 1]), ")","", -1) //, "*","",-1)
+										if strings.Contains(fnString, "*"){
+											intname = fmt.Sprintf(`*%s`, intname)
+										}
+										if !Exists(fnInterfaceMap[fn.Name.Name], intname ) {
+
+											fnInterfaceMap[fn.Name.Name] = append(fnInterfaceMap[fn.Name.Name], intname)
+
+										}
+									}
+
 									if fn.Type.Params != nil {
+
+										
+										
+										
 										strret := ""
 										limtlen := len(fn.Type.Params.List) - 1
 										for indx, fieldss := range fn.Type.Params.List {
@@ -117,8 +155,9 @@ func main() {
 										}
 									} 
 
-									
 
+									
+									fmt.Println(fnInterfaceMap)
 									//build rpc method
 									varss := strings.Split(fnParamMap[fn.Name.Name], ",")
 									responseformat := ``
@@ -126,6 +165,8 @@ func main() {
 									funcfields := []string{}
 									binderString := ``
 									jssetters := ``
+									interfaceMap := fnInterfaceMap
+									ObjMap, hasmap := interfaceMap[fn.Name.Name]
 									varsslen := len(varss) - 1
 									for ind, variabl := range varss {
 										varname := strings.Split(variabl, " ")
@@ -133,6 +174,7 @@ func main() {
 											fnFormat += fmt.Sprintf("tmvv.%s", strings.Title(varname[0]))
 											jssetters += fmt.Sprintf(`
 	t.%s = %s`, strings.Title(varname[0]), strings.Title(varname[0]))
+
 											if ind < varsslen {
 												fnFormat += ","
 											}
@@ -144,6 +186,18 @@ func main() {
 									if fnFormat == "" {
 										comma = ""
 									}
+
+									if hasmap && !strings.Contains(jstrbits, "function ObjectCallb") {
+										jstrbits += `
+function ObjectCallb(jsonobj,success) {
+	this.Working = false;
+	Object.assign(this, jsonobj.Obj)
+	this.cb(jsonobj.Result, success)
+}
+										`
+									}
+
+									if !hasmap {
 									jstrbits += fmt.Sprintf(`/**
 * RPC function : %s
 * %s
@@ -154,21 +208,94 @@ func main() {
 */
 `, fn.Name.Name, strings.Replace(strings.Join(checkforRPC, `
 *`), "//","" , -1 ),name,fn.Name.Name, fnParamMap[fn.Name.Name], fnReturnMap[fn.Name.Name] )
+								}
 
 									if strings.Contains(name, "main") {
+
+									if hasmap {
+
+										for i := 0; i < len(ObjMap); i++ {
+											intr := ObjMap[i]
+											intr = strings.Replace(intr, "*", "" , -1 )
+											intrint := fmt.Sprintf(`
+/**
+* %s
+* @namespace %s
+* @param Obj - Object with Go interface fields.
+* @return %s - Object with specified interface.
+*/
+var %s = function(Obj) {
+	Object.assign(this, Obj)
+}											
+`, intr,name,intr, intr)
+											if !strings.Contains(jstrbits,intrint) {
+												jstrbits += intrint
+											}
+
+											jstrbits += fmt.Sprintf(`%s.prototype.%s = function(%s %s cb){
+	var t = {};
+	%s
+	var payload = {Obj : this, Params : t};
+	t.Working = true;
+	this.cb = cb;
+	jsrequestmomentum("/momentum/funcs?name=%s.%s", payload, "POSTJSON", ObjectCallb.bind(this))
+}
+`, intr,fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, ObjMap[i], fn.Name.Name)
+
+
+										}
+									} else {
 									jstrbits += fmt.Sprintf(`function %s(%s %s cb){
 	var t = {}
 	%s
 	jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", cb)
 }
 `, fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, fn.Name.Name)
+
+									}
+
 									} else {
-										jstrbits += fmt.Sprintf(`%s["%s"] = function(%s %s cb){
+
+										if hasmap {
+
+										for i := 0; i < len(ObjMap); i++ {
+											intr := ObjMap[i]
+											intr = strings.Replace(intr, "*", "" , -1 ) 
+											intrint := fmt.Sprintf(`
+/**
+* %s
+* @namespace %s
+* @param Obj - Object with Go interface fields.
+* @return %s - Object with specified interfaces.
+*/
+var %s["%s"] = function(Obj) {
+	Object.assign(this, Obj)
+}							
+`, intr,name,intr,intr, ObjMap[i])
+											if !strings.Contains(jstrbits,intrint) {
+												jstrbits += intrint
+											}
+
+											jstrbits += fmt.Sprintf(`%s[%s].prototype.%s = function(%s %s cb){
 	var t = {}
 	%s
-	jsrequestmomentum("/momentum/funcs?name=%s.%s", t, "POSTJSON", cb)
+	var payload = {Obj : this, Params : t}
+	jsrequestmomentum("/momentum/funcs?name=%s.%s", payload, "POSTJSON", cb)
+}
+`,name , intr,fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, ObjMap[i],fn.Name.Name)
+
+
+										}
+									}	else {
+										jstrbits += fmt.Sprintf(`%s["%s"] = function(%s %s cb){
+									}
+	var t = {}
+	%s
+	t.Working = true
+	jsrequestmomentum("/momentum/funcs?name=%s", t, "POSTJSON", ObjectCallb.bind(this))
 }
 `, name,fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "", -1), comma, jssetters, name,fn.Name.Name)
+										}
 									}
 
 									parsable := strings.Split(fnReturnMap[fn.Name.Name], ",")
@@ -178,8 +305,41 @@ func main() {
 									}
 									if fnReturnMap[fn.Name.Name] == "" {
 
-															strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s%s" {
-			w.Header().Set("Content-Type", "application/json")
+										if hasmap {
+											var freeifptn string
+											if strings.Contains(ObjMap[0], "*"){
+												freeifptn = "tmvv.Obj = nil"
+											}
+												strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s%s.%s" {
+											
+			w.Header().Set(ContentType, ContentField )
+			type Payload%s struct {
+				%s
+			}
+			type Group%s struct {
+				Obj %s
+				Params Payload%s
+			}
+			decoder := json.NewDecoder(r.Body)
+			 var tmvv Group%s
+			 err := decoder.Decode(&tmvv)
+			 if err != nil {
+			 	w.WriteHeader(http.StatusInternalServerError)
+			    w.Write([]byte(fmt.Sprintf("{\"error\":\"%%s\"}",err.Error())))
+			    return
+			 }
+			resp := bson.M{}
+			tmvv.Obj.%s(%s)
+			resp["Obj"] = tmvv.Obj
+			jsonstr := mResponse(resp)
+			jsonbytes := []byte(jsonstr)
+			w.Write(jsonbytes)
+			jsonbytes = nil
+			%s
+		`, namemod,ObjMap[0],fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name,  ObjMap[0], fn.Name.Name ,fn.Name.Name, fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "tmvv.Params.",1) , freeifptn)
+										} else {
+														strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s%s" {
+			w.Header().Set(ContentType, ContentField )
 			type Payload%s struct {
 				%s
 			}
@@ -193,10 +353,16 @@ func main() {
 			 }
 			resp := bson.M{}
 			%s(%s)
-			w.Write([]byte(mResponse(resp)))
+			jsonstr := mResponse(resp)
+			jsonbytes := []byte(jsonstr)
+			w.Write(jsonbytes)
+			jsonbytes = nil
 		`, namemod,fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, fn.Name.Name, fnFormat)
+									}
+
 									} else {
-									parsablelen := len(parsable) - 1
+
+											parsablelen := len(parsable) - 1
 									for ind, variabl := range parsable {
 										varname := strings.Split(variabl, " ")
 
@@ -217,8 +383,43 @@ func main() {
 										}
 									}
 
+								if hasmap {
+											var freeifptn string
+											if strings.Contains(ObjMap[0], "*"){
+												freeifptn = "tmvv.Obj = nil"
+											}
+												strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s%s.%s" {
+			w.Header().Set(ContentType, ContentField )
+			type Payload%s struct {
+				%s
+			}
+			type Group%s struct {
+				Obj %s
+				Params Payload%s
+			}
+			decoder := json.NewDecoder(r.Body)
+			 var tmvv Group%s
+			 err := decoder.Decode(&tmvv)
+			 if err != nil {
+			 	w.WriteHeader(http.StatusInternalServerError)
+			    w.Write([]byte(fmt.Sprintf("{\"error\":\"JSON : %%s\"}",err.Error())))
+			    return
+			 }
+			resp := bson.M{}
+			%s := tmvv.Obj.%s(%s)
+			%s
+			respW := bson.M{"Obj" : tmvv.Obj, "Result" : resp}
+			jsonstr := mResponse(respW)
+			jsonbytes := []byte(jsonstr)
+			w.Write(jsonbytes)
+			jsonbytes = nil
+			%s
+		`,namemod, ObjMap[0] , fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"),fn.Name.Name, ObjMap[0], fn.Name.Name, fn.Name.Name, responseformat, fn.Name.Name, strings.Replace(fnFormat, "tmvv.", "tmvv.Params.",1) , binderString,freeifptn)
+										}  else {
+								
+
 									strfuncs += fmt.Sprintf(`} else if r.FormValue("name") == "%s%s" {
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set(ContentType, ContentField )
 			type Payload%s struct {
 				%s
 			}
@@ -233,12 +434,19 @@ func main() {
 			resp := bson.M{}
 			%s := %s(%s)
 			%s
-			w.Write([]byte(mResponse(resp)))
+			jsonstr := mResponse(resp)
+			jsonbytes := []byte(jsonstr)
+			w.Write(jsonbytes)
+			jsonbytes = nil
 		`,namemod, fn.Name.Name, fn.Name.Name, strings.Join(funcfields, "\n"), fn.Name.Name, responseformat, fn.Name.Name, fnFormat, binderString)
 							
 
+								}
+
 
 							}
+
+							delete(fnInterfaceMap, fn.Name.Name)
 
 								}
 
@@ -251,15 +459,30 @@ func main() {
 				// Print the modified AST.
 			}
 		}
-		strtemplate = fmt.Sprintf(`func Momentum(w http.ResponseWriter, r *http.Request) {
+		strtemplate = fmt.Sprintf(`
+		var notfound =  []byte("{\"error\":\"Function not found!\" } ")
+		const ContentType = "Content-Type"
+		const ContentField = "application/json"
+		const AllowedOrigins = "*"
+
+		func Momentum(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Set("Access-Control-Allow-Origin", AllowedOrigins)
+		w.Header().Set("Access-Control-Allow-Headers", ContentType)
+
+		
 		defer func() {
 			if n := recover(); n != nil {
 				w.Write([]byte(mResponse(bson.M{"error": fmt.Sprintf("%%s", n)})))
 			}
 		}()
-		if r.FormValue("name") == "reset" {
+		if r.FormValue("name") == "reset" || r.Method == "OPTIONS" {
 			return
 		%s
+		} else {
+			w.Header().Set(ContentType, ContentField )
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(notfound)
 		}
 	}`, strfuncs)
 
@@ -287,7 +510,7 @@ func main() {
     }
   return str.join("&");
   }
-  xhttp.open(type, url, true);
+  xhttp.open(type == "POSTJSON" ? "POST" : type, url, true);
 
   if(type == "POST"){
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -354,7 +577,7 @@ func main() {
 			w.Write( jsinitbytes )
 		}
 		w.Write(jsfuncs)
-	}`, name, fmt.Sprintf("` %s `",jsdepfuncs),  fmt.Sprintf("` %s `",jstrbits), strtemplate )
+	}`, name, fmt.Sprintf("` %s `",jsdepfuncs),  fmt.Sprintf("` %s `",jstrbits ), strtemplate )
 
 		d1 := []byte(jsstr)
 		_ = ioutil.WriteFile(fmt.Sprintf("momentum_%s.go", name), d1, 0700)
