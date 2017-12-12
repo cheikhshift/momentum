@@ -91,7 +91,7 @@ func main() {
 										}
 										
 
-										intname := strings.Replace(strings.TrimSpace(partssub[len(partssub) - 1]), ")","", -1) //, "*","",-1)
+										intname :=strings.Replace( strings.Replace(strings.TrimSpace(partssub[len(partssub) - 1]), ")","", -1) , "*","",-1)
 										if strings.Contains(fnString, "*"){
 											intname = fmt.Sprintf(`*%s`, intname)
 										}
