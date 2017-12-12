@@ -27,9 +27,11 @@ func main() {
 
 	flag.Parse()
 
-	err := os.Chdir(*wd)
-	if err != nil {
-		panic(err)
+	if *wd != "" {
+		err := os.Chdir(*wd)
+		if err != nil {
+			panic(err)
+		}
 	}
 	
 	// Used GoAst example as starter
@@ -170,7 +172,7 @@ func main() {
 
 
 									
-									fmt.Println(fnInterfaceMap)
+									
 									//build rpc method
 									varss := strings.Split(fnParamMap[fn.Name.Name], ",")
 									responseformat := ``
