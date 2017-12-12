@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"os"
+	"flag"
 	"strings"
 )
 
@@ -21,10 +22,22 @@ func Exists(arr []string, lookup string) bool {
 }
 
 func main() {
+	wd :=  flag.String("workdir","", "Path of directory with go sources to convert.")
+	
+
+	flag.Parse()
+
+	err := os.Chdir(*wd)
+	if err != nil {
+		panic(err)
+	}
+	
 	// Used GoAst example as starter
 	fmt.Println("Welcome to Momentum Aftergo.")
 	fmt.Println("Converting funcs with `RPC` in comments.")
 
+
+	
 	//add template path
 	fnInterfaceMap := make(map[string][]string)
 	fnParamMap := make(map[string]string)
