@@ -56,6 +56,7 @@ func main() {
 	}
 	for name, pkg := range pkgs {
 		fmt.Println("Processing package :", name)
+		importsstr := []string{}
 		for fname, _ := range pkg.Files {
 			if strings.Contains(fname, "_test") {
 				os.Remove(fname)
@@ -78,6 +79,7 @@ func main() {
 				// and AST nodes.
 
 				// Remove the first variable declaration from the list of declarations.
+				
 				for _, d := range f.Decls {
 					if fn, isFn := d.(*ast.FuncDecl); isFn {
 						if fn.Doc != nil {
@@ -87,6 +89,12 @@ func main() {
 								var objcomps = make(map[string]string)
 								for i, cmment := range fn.Doc.List {
 									checkforRPC[i] = cmment.Text
+									if strings.Contains(cmment.Text, "@import") {
+										pkgpath := strings.TrimSpace(strings.Replace(cmment.Text, "@import", "", 1) ) 
+										if !Exists(importsstr, pkgpath) {
+											importsstr = append(importsstr, pkgpath)
+										}
+									}
 									if strings.Contains(cmment.Text, "@case") {
 										casestr := strings.Replace(cmment.Text ,"//","", -1 )
 										testcases = append(testcases, casestr )
@@ -272,11 +280,12 @@ func main() {
 		import (
 			"testing"
 			"github.com/go-test/deep"
+			%s
 		)
 		
 
 		%s
-		`,name,strfuncs)
+		`,name,strings.Replace(strings.Join(importsstr, "\n") ,"//","", -1),strfuncs)
 		d1 := []byte(jsstr)
 
 		_ = ioutil.WriteFile(fmt.Sprintf("%s_test.go", name), d1, 0700)

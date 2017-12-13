@@ -44,3 +44,6 @@ For example :
 	// @case "string" @equal "value string", nil
 	// @obj &Stk{Var : "Newva"} @equal &Stk{Var : "Newval"}
 	func (st * Stk) TestFunction (cas string) (res string,err error) {
+
+
+Notes : You may need to update the imports of your generaed file. In case you are comparing values from other packages. You may also use syntax `@import <path_to_package>`. For example `// @import "path/to/pkg"`
