@@ -1,5 +1,5 @@
 # go-test
-Generate tests and benchmarks of your Go functions.
+Generate test and benchmark functions of your Go functions.
 
 ## Install
 
@@ -14,6 +14,17 @@ The following package will be used in your generated code : `go get github.com/g
 # How it works
 1. Add  comment (on new line) `@test` to the function you wish to test.
 3. Run `$ go-test`. (optional) Use flag `workdir` to specify path of directory with go sources.
+
+## CLI flags
+
+	  Usage of go-test:
+	  -bench
+	    	Run benchmark tests after source files are created.
+	  -test $ go test
+	    	Run $ go test after source files are created.
+	  -workdir string
+	    	Path of directory with go sources to convert.
+
 
 ## Define test cases
 Add a comment, to your function, with following format `@case <input_variables> @equal <output_variables>` to define a test case. Definitions of `@case` syntax  :
