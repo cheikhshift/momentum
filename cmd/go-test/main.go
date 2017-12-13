@@ -10,6 +10,8 @@ import (
 	"os"
 	"flag"
 	"strings"
+	"log"
+	"regexp"
 )
 
 func Exists(arr []string, lookup string) bool {
@@ -24,6 +26,7 @@ func Exists(arr []string, lookup string) bool {
 func main() {
 	wd :=  flag.String("workdir","", "Path of directory with go sources to convert.")
 	runtest := flag.Bool("test", false, "Run `$ go test` after source files are created.")
+	runbench := flag.Bool("bench", false, "Run benchmark tests after source files are created.")
 
 	flag.Parse()
 
@@ -81,10 +84,18 @@ func main() {
 							if len(fn.Doc.List) > 0 {
 								var checkforRPC = make([]string, len(fn.Doc.List), len(fn.Doc.List))
 								var testcases = []string{}
+								var objcomps = make(map[string]string)
 								for i, cmment := range fn.Doc.List {
 									checkforRPC[i] = cmment.Text
 									if strings.Contains(cmment.Text, "@case") {
-										testcases = append(testcases, strings.Replace(cmment.Text ,"//","", -1 ) )
+										casestr := strings.Replace(cmment.Text ,"//","", -1 )
+										testcases = append(testcases, casestr )
+										if  (i + 1 ) < len(checkforRPC) {
+											probObj := fn.Doc.List[(i + 1)]
+											if strings.Contains(probObj.Text, "@obj") {
+												objcomps[casestr] =  strings.Replace(probObj.Text ,"//","", -1 )
+											}
+										}
 									}
 								}
 								if strings.Contains(strings.Join(checkforRPC, ":"), "@test") {
@@ -124,12 +135,58 @@ func main() {
 								
 								
 									var strtester string
-
+									var benchmarktests string
 									for i := 0; i < len(testcases); i++ {
 										caseset := strings.Split(strings.Replace(testcases[i],"@case", "", 1),"@equal")
 										
 										expoutput := strings.Split(caseset[1], ",")
 										expoutmapped := ""
+										var objset []string
+										var subsetbench string
+										if hasmap {
+										subsetbench = strings.TrimSpace(fmt.Sprintf("%s%s", ObjMap[0], caseset[0]) )
+										
+										} else {
+											subsetbench = strings.TrimSpace( caseset[0])
+										}
+										reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+									    if err != nil {
+									        log.Fatal(err)
+									    }
+									   subsetbench = reg.ReplaceAllString(subsetbench, "")
+										
+										if objcmp, exists := objcomps[testcases[i]]; hasmap && exists {
+												objset = strings.Split(strings.Replace(objcmp,"@obj", "", 1),"@equal")
+											strtester += fmt.Sprintf(`
+											obj = %s`, objset[0])
+											benchmarktests += fmt.Sprintf(`									func Benchmark%s%s(b *testing.B) {
+									 		// credits to @davecheney
+											obj := %s
+									        for n := 0; n < b.N; n++ {
+									                obj.%s(%s)
+									        }
+										}
+										`, fn.Name.Name,subsetbench, objset[0],fn.Name.Name, caseset[0] )								
+										} else if hasmap {
+											benchmarktests += fmt.Sprintf(`									func Benchmark%s%s(b *testing.B) {
+									 		// credits to @davecheney
+											obj := %s{}
+									        for n := 0; n < b.N; n++ {
+									                obj.%s(%s)
+									        }
+										}
+										`, fn.Name.Name,subsetbench, strings.Replace(ObjMap[0], "*","&", 1),fn.Name.Name, caseset[0] )			
+										} else {
+												benchmarktests += fmt.Sprintf(`									func Benchmark%s%s(b *testing.B) {
+									 		// credits to @davecheney
+									        for n := 0; n < b.N; n++ {
+									                %s(%s)
+									        }
+										}
+										`, fn.Name.Name,subsetbench,fn.Name.Name, caseset[0] )			
+										}
+
+										
 										for u := 0; u < len(expoutput); u++ {
 											
 
@@ -141,6 +198,7 @@ func main() {
 										if hasmap {
 											strtester += fmt.Sprintf(`
 												%s := obj.%s(%s)`, expoutmapped,fn.Name.Name, caseset[0])
+
 										} else {
 										strtester += fmt.Sprintf(`
 											%s := %s(%s)`, expoutmapped,fn.Name.Name, caseset[0])
@@ -153,19 +211,30 @@ func main() {
 	`,i, u, expoutput[u])
 										}
 
+										if objset != nil && len(objset) > 1 {
+										strtester += fmt.Sprintf(`
+											if diff := deep.Equal(obj, %s); diff != nil {
+												t.Error(diff)
+											}
+	`, objset[1])	
+										}
+
 									}
 
 								
 
 								if hasmap {
-											
+									
 										strfuncs += fmt.Sprintf(`
 									func Test%s(t *testing.T) {
 										obj := %s{}
 
 										%s
 										
-									}`,fn.Name.Name,strings.Replace(ObjMap[0], "*","&", 1),strtester)
+									}
+
+									%s
+									`,fn.Name.Name,strings.Replace(ObjMap[0], "*","&", 1),strtester , benchmarktests)
 								
 
 								}  else {
@@ -214,6 +283,9 @@ func main() {
 		core.RunCmd(fmt.Sprintf("gofmt -w %s_test.go", name))
 		if *runtest {
 			core.RunCmd("go test")
+		}
+		if *runbench {
+			core.RunCmd("go test -bench=.")
 		}
 	}
 }
