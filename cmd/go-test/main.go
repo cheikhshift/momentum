@@ -253,7 +253,9 @@ func main() {
 										
 										%s
 										
-									}`,fn.Name.Name,strtester)
+									}
+
+									%s`,fn.Name.Name,strtester,benchmarktests)
 
 								}
 
