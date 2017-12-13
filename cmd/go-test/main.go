@@ -96,12 +96,12 @@ func main() {
 										}
 									}
 									if strings.Contains(cmment.Text, "@case") {
-										casestr := strings.Replace(cmment.Text ,"//","", -1 )
+										casestr := strings.Replace(cmment.Text ,"//","", 1 )
 										testcases = append(testcases, casestr )
 										if  (i + 1 ) < len(checkforRPC) {
 											probObj := fn.Doc.List[(i + 1)]
 											if strings.Contains(probObj.Text, "@obj") {
-												objcomps[casestr] =  strings.Replace(probObj.Text ,"//","", -1 )
+												objcomps[casestr] =  strings.Replace(probObj.Text ,"//","", 1 )
 											}
 										}
 									}
