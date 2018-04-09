@@ -41,8 +41,8 @@ Following a comment with `@case` you may also define the interface to use with y
 For example : 
 
 	// @test
-	// @obj &Stk{Var : "Newva"} @equal &Stk{Var : "Newval"}
 	// @case "string" @equal "value string", nil
+	// @obj &Stk{Var : "Newva"} @equal &Stk{Var : "Newval"}
 	func (st * Stk) TestFunction (cas string) (res string,err error) {
 
 
