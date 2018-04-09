@@ -41,9 +41,9 @@ Following a comment with `@case` you may also define the interface to use with y
 For example : 
 
 	// @test
-	// @case "string" @equal "value string", nil
 	// @obj &Stk{Var : "Newva"} @equal &Stk{Var : "Newval"}
+	// @case "string" @equal "value string", nil
 	func (st * Stk) TestFunction (cas string) (res string,err error) {
 
 
-Notes : You may need to update the imports of your generaed file. In case you are comparing values from other packages. You may also use syntax `@import <path_to_package>`. For example `// @import "path/to/pkg"`
+Notes : You may need to update the imports of your generated file. In case you are comparing values from other packages. You may also use syntax `@import <path_to_package>`. For example `// @import "path/to/pkg"`
